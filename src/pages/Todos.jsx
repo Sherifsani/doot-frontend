@@ -18,7 +18,7 @@ const Todos = () => {
           navigate("/login");
           return;
         }
-        
+
         const res = await axios.get("http://localhost:3000/api/todo/all", {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -35,7 +35,7 @@ const Todos = () => {
       }
     };
     getData();
-  }, [navigate]);
+  }, [todo]);
 
   const handleChange = (e) => {
     setError(""); // Clear any previous errors
@@ -72,6 +72,30 @@ const Todos = () => {
     navigate("/login");
   };
 
+  const deleteTodo = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      await axios.delete(`http://localhost:3000/api/todo/delete/${todo._id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setTodos((prev) => prev.filter((todo) => todo._id !== todo._id));
+    } catch (err) {
+      if (err.response?.status === 401) {
+        localStorage.removeItem("accessToken");
+        navigate("/login");
+      } else {
+        setError(err.response?.data?.message || "Failed to delete todo");
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen pb-20 relative">
       <div className="w-full max-w-lg mx-auto -translate-y-16 flex flex-col items-center gap-10">
@@ -88,7 +112,10 @@ const Todos = () => {
         </form>
         <div className="todo-items w-5/6 mx-auto shadow-lg rounded-sm">
           {todos.map((todo) => (
-            <TodoItem key={todo._id} todo={todo} />
+            <>
+              <span onClick={() => console.log(todo._id)}>span</span>
+              <TodoItem key={todo._id} todo={todo} deleteTodo={deleteTodo} />
+            </>
           ))}
         </div>
       </div>
@@ -104,7 +131,7 @@ const Todos = () => {
   );
 };
 
-const TodoItem = ({ todo }) => {
+const TodoItem = ({ todo, deleteTodo }) => {
   const [isDone, setIsDone] = useState(todo.completed);
 
   return (
@@ -120,12 +147,7 @@ const TodoItem = ({ todo }) => {
       </div>
       <p className={isDone ? "line-through" : ""}>{todo.todo}</p>
       <div className="delete w-4 h-4 cursor-pointer ml-auto">
-        <img
-          src={iconCross}
-          alt=""
-          className="w-3 h-3"
-          onClick={() => setIsDone(!isDone)}
-        />
+        <img src={iconCross} alt="" className="w-3 h-3" onClick={deleteTodo} />
       </div>
     </div>
   );
