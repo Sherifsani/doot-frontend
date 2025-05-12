@@ -35,7 +35,7 @@ const Todos = () => {
       }
     };
     getData();
-  }, [todo]);
+  }, [todo, navigate]);
 
   const handleChange = (e) => {
     setError(""); // Clear any previous errors
@@ -72,7 +72,7 @@ const Todos = () => {
     navigate("/login");
   };
 
-  const deleteTodo = async () => {
+  const deleteTodo = async (todoId) => {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
@@ -80,12 +80,12 @@ const Todos = () => {
         return;
       }
 
-      await axios.delete(`http://localhost:3000/api/todo/delete/${todo._id}`, {
+      await axios.delete(`http://localhost:3000/api/todo/delete/${todoId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setTodos((prev) => prev.filter((todo) => todo._id !== todo._id));
+      setTodos((prev) => prev.filter((t) => t._id !== todoId));
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.removeItem("accessToken");
@@ -113,8 +113,12 @@ const Todos = () => {
         <div className="todo-items w-5/6 mx-auto shadow-lg rounded-sm">
           {todos.map((todo) => (
             <>
-              <span onClick={() => console.log(todo._id)}>span</span>
-              <TodoItem key={todo._id} todo={todo} deleteTodo={deleteTodo} />
+              <span onClick={() => console.log(todo._id)}></span>
+              <TodoItem
+                key={todo._id}
+                todo={todo}
+                deleteTodo={() => deleteTodo(todo._id)}
+              />
             </>
           ))}
         </div>
